@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>给我最爱的人</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="heart-container">
+            <div class="heart"></div>
+        </div>
+        
+        <div class="content">
+            <h1 class="title">我们的爱情故事</h1>
+            <div class="photo-container">
+                <div class="photo-frame">
+                    <img id="current-photo" src="images/photo2.jpg" alt="我们的照片">
+                </div>
+            </div>
+            
+            <div class="message">
+                <p id="love-message">点击心形，开始我们的旅程...</p>
+            </div>
+            
+            <div class="controls">
+                <button id="start-button">开始浏览</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="floating-hearts"></div>
+    
+    <audio id="background-music" loop>
+        <source src="music/这就是爱.mp3" type="audio/mp3">
+    </audio>
+    
+    <script src="script.js"></script>
+</body>
+</html> 
