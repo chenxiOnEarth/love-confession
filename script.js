@@ -107,8 +107,6 @@ document.addEventListener('DOMContentLoaded', function() {
             clearInterval(slideshowInterval);
         }
         
-        updatePhoto(currentPhotoIndex);
-        
         // 开始播放音乐
         backgroundMusic.play().catch(e => console.log('无法自动播放音乐:', e));
         
