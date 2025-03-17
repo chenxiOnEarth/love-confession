@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 照片数组 - 你需要替换这些路径为你自己的照片
     const photos = [
         { src: 'images/photo1.jpg', message: '还记得我们第一次见面的场景吗？' },
-        { src: 'images/photo2.jpg', message: '一起看过的第一场电影...' },
         { src: 'images/photo3.jpg', message: '那次旅行，我们走过了许多地方' },
         { src: 'images/photo4.jpg', message: '你的笑容是我最爱的风景' },
         { src: 'images/photo5.jpg', message: '和你在一起的每一刻都很珍贵' },
