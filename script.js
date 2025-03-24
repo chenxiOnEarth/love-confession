@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 照片数组 - 你需要替换这些路径为你自己的照片
     const photos = [
         { src: 'images/photo1.jpg', message: '还记得我们第一次见面的场景吗？' },
+        { src: 'images/photo2.jpg', message: '一起看过的第一场电影...' },
         { src: 'images/photo3.jpg', message: '那次旅行，我们走过了许多地方' },
         { src: 'images/photo4.jpg', message: '你的笑容是我最爱的风景' },
         { src: 'images/photo5.jpg', message: '和你在一起的每一刻都很珍贵' },
@@ -22,6 +23,18 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPhotoIndex = 0;
     let slideshowInterval;
     let isPlaying = false;
+    let isTransitioning = false; // 新增：标记是否正在切换照片
+    
+    // 预加载所有图片
+    function preloadImages() {
+        photos.forEach(photo => {
+            const img = new Image();
+            img.src = photo.src;
+        });
+    }
+    
+    // 立即预加载图片
+    preloadImages();
     
     // 创建漂浮的心形
     function createFloatingHearts() {
@@ -58,6 +71,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 更新照片和消息
     function updatePhoto(index) {
+        // 如果正在切换，则忽略此次调用
+        if (isTransitioning) return;
+        
+        isTransitioning = true;
         currentPhoto.style.opacity = 0;
         
         setTimeout(() => {
@@ -94,9 +111,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const heartContainer = document.querySelector('.heart-container');
                 const heartHeight = heartContainer.offsetHeight;
                 container.style.marginTop = `${heartHeight + 20}px`; // 20px为额外间距
+                
+                currentPhoto.style.opacity = 1;
+                
+                // 切换完成后重置标志
+                setTimeout(() => {
+                    isTransitioning = false;
+                }, 300);
             };
-            
-            currentPhoto.style.opacity = 1;
         }, 500);
     }
     
@@ -110,9 +132,12 @@ document.addEventListener('DOMContentLoaded', function() {
         backgroundMusic.play().catch(e => console.log('无法自动播放音乐:', e));
         
         slideshowInterval = setInterval(() => {
-            currentPhotoIndex = (currentPhotoIndex + 1) % photos.length;
-            updatePhoto(currentPhotoIndex);
-        }, 2000);
+            // 只有不在转场中才进行下一张照片的切换
+            if (!isTransitioning) {
+                currentPhotoIndex = (currentPhotoIndex + 1) % photos.length;
+                updatePhoto(currentPhotoIndex);
+            }
+        }, 2500); // 增加间隔时间，给予移动设备更多的加载时间
         
         startButton.textContent = '暂停浏览';
         isPlaying = true;
@@ -185,6 +210,6 @@ document.addEventListener('DOMContentLoaded', function() {
     createFloatingHearts();
     
     // 设置初始照片
-    currentPhoto.src = 'images/photo2.jpg';
+    updatePhoto(0); // 使用 updatePhoto 函数设置初始照片，保持一致性
     loveMessage.textContent = '点击心形，开始我们的旅程...';
 }); 
