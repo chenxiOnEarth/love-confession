@@ -1,14 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 照片数组 - 你需要替换这些路径为你自己的照片
+    // 检测是否在 GitHub Pages 环境并修正路径
+    function fixPathForGitHubPages(path) {
+        if (window.location.hostname.includes('github.io') && !path.startsWith('/')) {
+            const repoName = window.location.pathname.split('/')[1];
+            if (repoName && !path.startsWith(`/${repoName}/`)) {
+                return `/${repoName}/${path}`;
+            }
+        }
+        return path;
+    }
+    
+    // 修正照片数组中的路径
     const photos = [
-        { src: 'images/photo1.jpg', message: '还记得我们第一次见面的场景吗？' },
-        { src: 'images/photo2.jpg', message: '一起看过的第一场电影...' },
-        { src: 'images/photo3.jpg', message: '那次旅行，我们走过了许多地方' },
-        { src: 'images/photo4.jpg', message: '你的笑容是我最爱的风景' },
-        { src: 'images/photo5.jpg', message: '和你在一起的每一刻都很珍贵' },
-        { src: 'images/photo6.jpg', message: '希望未来的日子，我们一直手牵手走下去' },
-        { src: 'images/photo7.jpg', message: '老婆我爱你！❤️' },
-        { src: 'images/photo8.jpg', message: '愿我们的爱情，如这照片一样美好永恒' }
+        { src: fixPathForGitHubPages('images/photo1.jpg'), message: '还记得我们第一次见面的场景吗？' },
+        { src: fixPathForGitHubPages('images/photo2.jpg'), message: '一起看过的第一场电影...' },
+        { src: fixPathForGitHubPages('images/photo3.jpg'), message: '那次旅行，我们走过了许多地方' },
+        { src: fixPathForGitHubPages('images/photo4.jpg'), message: '你的笑容是我最爱的风景' },
+        { src: fixPathForGitHubPages('images/photo5.jpg'), message: '和你在一起的每一刻都很珍贵' },
+        { src: fixPathForGitHubPages('images/photo6.jpg'), message: '希望未来的日子，我们一直手牵手走下去' },
+        { src: fixPathForGitHubPages('images/photo7.jpg'), message: '老婆我爱你！❤️' },
+        { src: fixPathForGitHubPages('images/photo8.jpg'), message: '愿我们的爱情，如这照片一样美好永恒' }
     ];
     
     // 获取DOM元素
@@ -20,21 +31,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const floatingHeartsContainer = document.querySelector('.floating-hearts');
     const photoContainer = document.querySelector('.photo-container');
     
+    // 修正背景音乐路径
+    if (backgroundMusic && backgroundMusic.querySelector('source')) {
+        const source = backgroundMusic.querySelector('source');
+        source.src = fixPathForGitHubPages(source.src);
+    }
+    
     let currentPhotoIndex = 0;
     let slideshowInterval;
     let isPlaying = false;
     let isTransitioning = false; // 新增：标记是否正在切换照片
     
-    // 预加载所有图片
+    // 预加载所有图片并检查是否可以访问
     function preloadImages() {
-        photos.forEach(photo => {
-            const img = new Image();
-            img.src = photo.src;
-        });
+        return Promise.all(photos.map(photo => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(photo.src);
+                img.onerror = () => {
+                    console.error(`无法加载图片: ${photo.src}`);
+                    // 如果加载失败，尝试替换路径（GitHub Pages相对路径可能不同）
+                    if (photo.src.startsWith('images/')) {
+                        photo.src = `/love-confession/${photo.src}`;
+                        const retryImg = new Image();
+                        retryImg.onload = () => resolve(photo.src);
+                        retryImg.onerror = () => reject(`无法加载图片: ${photo.src}`);
+                        retryImg.src = photo.src;
+                    } else {
+                        reject(`无法加载图片: ${photo.src}`);
+                    }
+                };
+                img.src = photo.src;
+            });
+        }));
     }
     
     // 立即预加载图片
-    preloadImages();
+    preloadImages()
+        .then(() => console.log('所有图片预加载成功'))
+        .catch(err => console.error('图片预加载出错:', err));
     
     // 创建漂浮的心形
     function createFloatingHearts() {
@@ -78,11 +113,15 @@ document.addEventListener('DOMContentLoaded', function() {
         currentPhoto.style.opacity = 0;
         
         setTimeout(() => {
-            currentPhoto.src = photos[index].src;
-            loveMessage.textContent = photos[index].message;
+            // 创建临时图片确保加载完成
+            const tempImg = new Image();
             
-            // 等待图片加载完成后调整容器高度
-            currentPhoto.onload = function() {
+            tempImg.onload = function() {
+                // 图片加载成功后再更新DOM
+                currentPhoto.src = photos[index].src;
+                loveMessage.textContent = photos[index].message;
+                
+                // 等待图片加载完成后调整容器高度
                 const aspectRatio = this.naturalWidth / this.naturalHeight;
                 const maxWidth = photoContainer.offsetWidth;
                 const maxHeight = Math.min(
@@ -119,6 +158,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     isTransitioning = false;
                 }, 300);
             };
+            
+            tempImg.onerror = function() {
+                console.error(`无法加载图片: ${photos[index].src}`);
+                // 如果图片加载失败，尝试更改路径
+                if (photos[index].src.startsWith('images/')) {
+                    const newSrc = `/love-confession/${photos[index].src}`;
+                    console.log(`尝试使用新路径: ${newSrc}`);
+                    photos[index].src = newSrc;
+                    updatePhoto(index); // 递归调用自身尝试新路径
+                } else {
+                    // 显示一个占位图或错误消息
+                    loveMessage.textContent = `图片加载失败，但我们的爱不会失败❤️`;
+                    isTransitioning = false;
+                }
+            };
+            
+            // 加载图片
+            tempImg.src = photos[index].src;
         }, 500);
     }
     
